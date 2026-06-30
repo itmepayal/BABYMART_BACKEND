@@ -12,6 +12,7 @@ import {
   verifyRefreshToken,
 } from "../../utils/jwt/token.jwt";
 import {
+  addressesInput,
   ChangePasswordInput,
   LoginInput,
   RegisterInput,
@@ -168,7 +169,10 @@ export const changePasswordService = async (
 /* =========================
    Address Management Services
 ========================= */
-export const addAddressService = async (userId: string, payload: IAddress) => {
+export const addAddressService = async (
+  userId: string,
+  payload: addressesInput,
+) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new NotFoundError("User not found.");

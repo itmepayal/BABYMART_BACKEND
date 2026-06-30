@@ -13,7 +13,6 @@ import {
   deleteAddressController,
   setDefaultAddressController,
 } from "./auth.controller";
-
 import { protect } from "../../middlewares/auth.middleware";
 import { validateRequestBody } from "../../validators";
 import {
