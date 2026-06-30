@@ -1,10 +1,11 @@
-import mongoose, { Document, Model, Schema } from "mongoose";
+import mongoose, { Document, Model, Schema, Types } from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export type UserRole = "customer" | "vendor" | "admin";
 
 export interface IAddress {
+  _id?: Types.ObjectId;
   label: string;
   fullName?: string;
   phone?: string;
@@ -27,6 +28,7 @@ export interface IUser extends Document {
   role: UserRole;
   avatar: string;
   addresses: IAddress[];
+  refreshToken: string;
   isActive: boolean;
   isEmailVerified: boolean;
   emailVerifyToken?: string;
@@ -101,6 +103,11 @@ const userSchema = new Schema<IUser, IUserModel>(
     avatar: {
       type: String,
       default: "",
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+      select: false,
     },
     addresses: [addressSchema],
     isActive: {
