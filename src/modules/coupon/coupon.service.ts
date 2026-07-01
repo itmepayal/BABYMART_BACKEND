@@ -8,13 +8,11 @@ import {
 /* =========================
    Helper Functions
 ========================= */
-
 const validateCouponCode = async (code: string, couponId?: string) => {
   const exists = await Coupon.findOne({
     ...(couponId && { _id: { $ne: couponId } }),
     code: code.toUpperCase(),
   });
-
   if (exists) {
     throw new BadRequestError("Coupon code already exists.");
   }
@@ -26,7 +24,6 @@ const validateCouponCode = async (code: string, couponId?: string) => {
 
 export const createCouponService = async (payload: CreateCouponInput) => {
   await validateCouponCode(payload.code);
-
   return await Coupon.create(payload);
 };
 
