@@ -38,5 +38,3 @@ adminRouter.delete(
   authorize("admin"),
   deleteUserController,
 );
-
-export default adminRouter;

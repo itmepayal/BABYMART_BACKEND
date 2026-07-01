@@ -1,5 +1,9 @@
+import mongoose from "mongoose";
 import User from "../../models/user.model";
 import { NotFoundError } from "../../utils/errors/app.error";
+import Cart from "../../models/cart.model";
+import Wishlist from "../../models/wishlist.model";
+import Review from "../../models/review.model";
 
 /* =========================
    Admin User Management Services
@@ -74,6 +78,19 @@ export const deleteUserService = async (userId: string) => {
   if (!user) {
     throw new NotFoundError("User not found.");
   }
-  await user.deleteOne();
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    await Cart.deleteOne({ user: user._id }).session(session);
+    await Wishlist.deleteOne({ user: user._id }).session(session);
+    await Review.deleteMany({ user: user._id }).session(session);
+    await user.deleteOne({ session });
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
   return null;
 };

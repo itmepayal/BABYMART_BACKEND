@@ -140,6 +140,21 @@ userSchema.pre("save", async function (next) {
   }
 });
 
+userSchema.pre("findOneAndDelete", async function (next) {
+  const user = await this.model.findOne(this.getQuery());
+  if (!user) return;
+
+  const Cart = mongoose.model("Cart");
+  const Wishlist = mongoose.model("Wishlist");
+  const Review = mongoose.model("Review");
+
+  await Promise.all([
+    Cart.deleteOne({ user: user._id }),
+    Wishlist.deleteOne({ user: user._id }),
+    Review.deleteMany({ user: user._id }),
+  ]);
+});
+
 userSchema.methods.matchPassword = async function (
   enteredPassword: string,
 ): Promise<boolean> {

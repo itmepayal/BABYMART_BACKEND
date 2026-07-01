@@ -246,6 +246,27 @@ productSchema.pre("validate", function (next) {
   }
 });
 
+productSchema.pre("findOneAndDelete", async function (next) {
+  const product = await this.model.findOne(this.getQuery());
+  if (!product) return;
+
+  const Cart = mongoose.model("Cart");
+  const Wishlist = mongoose.model("Wishlist");
+  const Review = mongoose.model("Review");
+
+  await Promise.all([
+    Cart.updateMany(
+      { "items.product": product._id },
+      { $pull: { items: { product: product._id } } },
+    ),
+    Wishlist.updateMany(
+      { "items.product": product._id },
+      { $pull: { items: { product: product._id } } },
+    ),
+    Review.deleteMany({ product: product._id }),
+  ]);
+});
+
 productSchema.virtual("discountPercent").get(function (this: IProduct) {
   if (this.oldPrice && this.oldPrice > this.price) {
     return Math.round(((this.oldPrice - this.price) / this.oldPrice) * 100);
