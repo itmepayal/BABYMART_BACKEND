@@ -5,6 +5,7 @@ import {
   CreateCollectionInput,
   UpdateCollectionInput,
 } from "../../validators/collection.validation";
+import Product from "../../models/product.model";
 
 /* =========================
    Collection Services
@@ -121,8 +122,20 @@ export const updateCollectionService = async (
 
 export const deleteCollectionService = async (collectionId: string) => {
   const collection = await Collection.findById(collectionId);
+
   if (!collection) {
     throw new NotFoundError("Collection not found.");
   }
+
+  const isUsed = await Product.exists({
+    collections: collection._id,
+  });
+
+  if (isUsed) {
+    throw new BadRequestError(
+      "Cannot delete collection because it is assigned to one or more products.",
+    );
+  }
+
   await collection.deleteOne();
 };

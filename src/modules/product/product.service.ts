@@ -1,0 +1,229 @@
+import Product from "../../models/product.model";
+import Category from "../../models/category.model";
+import Collection from "../../models/collection.model";
+import { BadRequestError, NotFoundError } from "../../utils/errors/app.error";
+import {
+  CreateProductInput,
+  UpdateProductInput,
+} from "../../validators/product.validation";
+
+/* =========================
+   Product Services
+========================= */
+const validateCategories = async (categoryIds: string[]) => {
+  const count = await Category.countDocuments({
+    _id: { $in: categoryIds },
+  });
+
+  if (count !== categoryIds.length) {
+    throw new BadRequestError("One or more categories are invalid.");
+  }
+};
+
+const validateCollections = async (collectionIds: string[]) => {
+  const count = await Collection.countDocuments({
+    _id: { $in: collectionIds },
+  });
+
+  if (count !== collectionIds.length) {
+    throw new BadRequestError("One or more collections are invalid.");
+  }
+};
+
+const validateProductCode = async (code: string, productId?: string) => {
+  const exists = await Product.findOne({
+    ...(productId && { _id: { $ne: productId } }),
+    code,
+  });
+
+  if (exists) {
+    throw new BadRequestError("Product code already exists.");
+  }
+};
+export const createProductService = async (payload: CreateProductInput) => {
+  if (payload.categories?.length) {
+    await validateCategories(payload.categories);
+  }
+
+  if (payload.collections?.length) {
+    await validateCollections(payload.collections);
+  }
+
+  if (payload.code) {
+    await validateProductCode(payload.code);
+  }
+
+  return await Product.create(payload);
+};
+
+export const getAllProductsService = async (params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  collection?: string;
+  vendor?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  isFeatured?: boolean;
+  isActive?: boolean;
+  tags?: string[];
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    category,
+    collection,
+    vendor,
+    minPrice,
+    maxPrice,
+    inStock,
+    isFeatured,
+    isActive,
+    tags,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = params;
+
+  const skip = (page - 1) * limit;
+
+  const filter: Record<string, unknown> = {};
+
+  if (search) {
+    filter.$text = { $search: search };
+  }
+
+  if (category) {
+    filter.categories = category;
+  }
+
+  if (collection) {
+    filter.collections = collection;
+  }
+
+  if (vendor) {
+    filter.vendor = vendor;
+  }
+
+  if (tags?.length) {
+    filter.tags = { $in: tags };
+  }
+
+  if (typeof inStock === "boolean") {
+    filter.inStock = inStock;
+  }
+
+  if (typeof isFeatured === "boolean") {
+    filter.isFeatured = isFeatured;
+  }
+
+  if (typeof isActive === "boolean") {
+    filter.isActive = isActive;
+  }
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    filter.price = {
+      ...(minPrice !== undefined && { $gte: minPrice }),
+      ...(maxPrice !== undefined && { $lte: maxPrice }),
+    };
+  }
+
+  const sort: Record<string, 1 | -1> = {
+    [sortBy]: sortOrder === "asc" ? 1 : -1,
+  };
+
+  const [products, total] = await Promise.all([
+    Product.find(filter)
+      .populate("categories")
+      .populate("collections")
+      .populate("vendor", "-password")
+      .sort(sort)
+      .skip(skip)
+      .limit(limit),
+
+    Product.countDocuments(filter),
+  ]);
+
+  return {
+    products,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+export const getProductByIdService = async (productId: string) => {
+  const product = await Product.findById(productId)
+    .populate("categories")
+    .populate("collections")
+    .populate("vendor", "-password");
+
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  return product;
+};
+
+export const getProductBySlugService = async (slug: string) => {
+  const product = await Product.findOne({ slug })
+    .populate("categories")
+    .populate("collections")
+    .populate("vendor", "-password");
+
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  return product;
+};
+
+export const updateProductService = async (
+  productId: string,
+  payload: UpdateProductInput,
+) => {
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  if (payload.categories) {
+    await validateCategories(payload.categories);
+  }
+
+  if (payload.collections) {
+    await validateCollections(payload.collections);
+  }
+
+  if (payload.code) {
+    await validateProductCode(payload.code, productId);
+  }
+
+  Object.assign(product, payload);
+
+  await product.save();
+
+  return await product.populate([
+    { path: "categories" },
+    { path: "collections" },
+    { path: "vendor", select: "-password" },
+  ]);
+};
+
+export const deleteProductService = async (productId: string) => {
+  const product = await Product.findOneAndDelete({
+    _id: productId,
+  });
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+  return product;
+};

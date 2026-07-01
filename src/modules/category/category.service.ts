@@ -1,5 +1,6 @@
 import Category from "../../models/category.model";
 import Collection from "../../models/collection.model";
+import Product from "../../models/product.model";
 import { NotFoundError, BadRequestError } from "../../utils/errors/app.error";
 import {
   CreateCategoryInput,
@@ -88,16 +89,31 @@ export const updateCategoryService = async (
 
 export const deleteCategoryService = async (categoryId: string) => {
   const category = await Category.findById(categoryId);
+
   if (!category) {
     throw new NotFoundError("Category not found.");
   }
-  const isUsed = await Collection.exists({
-    categories: category._id,
-  });
-  if (isUsed) {
+
+  const [usedInCollections, usedInProducts] = await Promise.all([
+    Collection.exists({
+      categories: category._id,
+    }),
+    Product.exists({
+      categories: category._id,
+    }),
+  ]);
+
+  if (usedInCollections) {
     throw new BadRequestError(
       "Cannot delete category because it is assigned to one or more collections.",
     );
   }
+
+  if (usedInProducts) {
+    throw new BadRequestError(
+      "Cannot delete category because it is assigned to one or more products.",
+    );
+  }
+
   await category.deleteOne();
 };

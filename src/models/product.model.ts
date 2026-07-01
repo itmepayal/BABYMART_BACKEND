@@ -41,8 +41,8 @@ export interface IProduct extends Document {
   vendor: Types.ObjectId;
   code?: string;
 
-  categories: string[];
-  collections: string[];
+  categories: Types.ObjectId[];
+  collections: Types.ObjectId[];
   tags: string[];
 
   offers: IOffer[];
@@ -177,15 +177,15 @@ const productSchema = new Schema<IProduct, IProductModel>(
 
     categories: [
       {
-        type: String,
-        index: true,
+        type: Schema.Types.ObjectId,
+        ref: "Category",
       },
     ],
 
     collections: [
       {
-        type: String,
-        index: true,
+        type: Schema.Types.ObjectId,
+        ref: "Collection",
       },
     ],
 
