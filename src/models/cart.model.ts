@@ -10,15 +10,11 @@ export interface ICartItem {
 
 export interface ICart extends Document {
   user: Types.ObjectId;
-
   items: ICartItem[];
-
   couponCode?: string | null;
   discountAmount: number;
-
   subtotal: number;
   total: number;
-
   createdAt: Date;
   updatedAt: Date;
 }
