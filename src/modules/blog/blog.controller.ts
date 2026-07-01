@@ -15,21 +15,17 @@ import {
 /* =========================
    Blog Controllers
 ========================= */
-
 export const createBlogPostController = async (
   req: AuthRequest,
 ): Promise<void> => {
   if (!req.file) {
     throw new BadRequestError("Blog image is required.");
   }
-
   const uploaded = await uploadToCloudinary(req.file.path, "babymart/blogs");
-
   const blog = await createBlogPostService({
     ...req.body,
     image: uploaded.url,
   });
-
   apiResponse(
     req.res!,
     StatusCodes.CREATED,
@@ -67,7 +63,6 @@ export const getBlogPostByIdController = async (
   req: AuthRequest,
 ): Promise<void> => {
   const blog = await getBlogPostByIdService(req.params.blogPostId);
-
   apiResponse(
     req.res!,
     StatusCodes.OK,
