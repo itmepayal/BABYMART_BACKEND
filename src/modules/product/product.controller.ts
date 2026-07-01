@@ -147,7 +147,6 @@ export const updateProductController = async (
 
       galleryImages.push(uploaded.url);
     }
-
     payload.images = galleryImages;
   }
 
