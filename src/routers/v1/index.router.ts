@@ -7,6 +7,7 @@ import { collectionRouter } from "../../modules/collection/collection.route";
 import { productRouter } from "../../modules/product/product.route";
 import { couponRouter } from "../../modules/coupon/coupon.router";
 import { cartRouter } from "../../modules/cart/cart.route";
+import { wishlistRouter } from "../../modules/wishlist/wishlist.route";
 
 const v1Router = express.Router();
 
@@ -18,5 +19,6 @@ v1Router.use("/categories", categoryRouter);
 v1Router.use("/collections", collectionRouter);
 v1Router.use("/coupons", couponRouter);
 v1Router.use("/cart", cartRouter);
+v1Router.use("/wishlist", wishlistRouter);
 
 export default v1Router;
