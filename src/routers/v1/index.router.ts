@@ -11,6 +11,8 @@ import { wishlistRouter } from "../../modules/wishlist/wishlist.route";
 import { aboutRouter } from "../../modules/about/about.route";
 import { brandRouter } from "../../modules/brand/brand.route";
 import { bannerRouter } from "../../modules/banner/banner.route";
+import { newsletterRouter } from "../../modules/newsletter/newsletter.route";
+import { contactRouter } from "../../modules/contact/contact.route";
 
 const v1Router = express.Router();
 
@@ -26,5 +28,7 @@ v1Router.use("/wishlist", wishlistRouter);
 v1Router.use("/about", aboutRouter);
 v1Router.use("/brands", brandRouter);
 v1Router.use("/banners", bannerRouter);
+v1Router.use("/newsletters", newsletterRouter);
+v1Router.use("/contacts", contactRouter);
 
 export default v1Router;

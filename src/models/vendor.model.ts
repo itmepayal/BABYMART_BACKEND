@@ -18,7 +18,7 @@ export interface IVendorProfile extends Document {
   storeBanner?: string;
   storeDescription?: string;
 
-  commissionRate: number; // percent, e.g. 10 = 10%
+  commissionRate: number;
 
   gstNumber?: string;
   panNumber?: string;
@@ -33,7 +33,7 @@ export interface IVendorProfile extends Document {
 
   totalSales: number;
   totalOrders: number;
-  walletBalance: number; // pending payout amount
+  walletBalance: number;
 
   createdAt: Date;
   updatedAt: Date;
