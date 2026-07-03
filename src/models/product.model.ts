@@ -55,6 +55,12 @@ export interface IProduct extends Document {
   isFeatured: boolean;
   isActive: boolean;
 
+  // ---- approval workflow ----
+  isApproved: boolean;
+  approvedBy?: Types.ObjectId;
+  approvedAt?: Date;
+  rejectionReason?: string;
+
   countdown: ICountdown;
 
   createdAt: Date;
@@ -163,9 +169,10 @@ const productSchema = new Schema<IProduct, IProductModel>(
     },
 
     productType: String,
+
     vendor: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "VendorProfile",
       required: true,
     },
 
@@ -216,6 +223,20 @@ const productSchema = new Schema<IProduct, IProductModel>(
       default: true,
     },
 
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    approvedAt: Date,
+
+    rejectionReason: String,
+
     countdown: {
       enabled: {
         type: Boolean,
@@ -233,6 +254,8 @@ productSchema.index({
   title: "text",
   description: "text",
 });
+
+productSchema.index({ vendor: 1, isApproved: 1, isActive: 1 });
 
 productSchema.pre("validate", function (next) {
   if (!this.slug && this.title) {

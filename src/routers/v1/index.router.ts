@@ -8,6 +8,9 @@ import { productRouter } from "../../modules/product/product.route";
 import { couponRouter } from "../../modules/coupon/coupon.router";
 import { cartRouter } from "../../modules/cart/cart.route";
 import { wishlistRouter } from "../../modules/wishlist/wishlist.route";
+import { aboutRouter } from "../../modules/about/about.route";
+import { brandRouter } from "../../modules/brand/brand.route";
+import { bannerRouter } from "../../modules/banner/banner.route";
 
 const v1Router = express.Router();
 
@@ -20,5 +23,8 @@ v1Router.use("/collections", collectionRouter);
 v1Router.use("/coupons", couponRouter);
 v1Router.use("/cart", cartRouter);
 v1Router.use("/wishlist", wishlistRouter);
+v1Router.use("/about", aboutRouter);
+v1Router.use("/brands", brandRouter);
+v1Router.use("/banners", bannerRouter);
 
 export default v1Router;
