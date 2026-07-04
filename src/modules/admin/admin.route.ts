@@ -5,8 +5,10 @@ import {
   editUserRoleController,
   editUserStatusController,
   deleteUserController,
-} from "./admin.controller";
-import {
+  toggleActiveController,
+  toggleFeaturedController,
+  rejectProductController,
+  approveProductController,
   createProductController,
   deleteProductController,
   getAllProductsController,
@@ -51,3 +53,27 @@ adminRouter.patch(
   editProductController,
 );
 adminRouter.delete("/products/:productId", deleteProductController);
+adminRouter.patch(
+  "/products/:productId/approve",
+  protect,
+  authorize("admin"),
+  approveProductController,
+);
+adminRouter.patch(
+  "/products/:productId/reject",
+  protect,
+  authorize("admin"),
+  rejectProductController,
+);
+adminRouter.patch(
+  "/products/:productId/featured",
+  protect,
+  authorize("admin"),
+  toggleFeaturedController,
+);
+adminRouter.patch(
+  "/products/:productId/active",
+  protect,
+  authorize("admin"),
+  toggleActiveController,
+);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import User from "../../models/user.model";
 import { BadRequestError, NotFoundError } from "../../utils/errors/app.error";
 import Cart from "../../models/cart.model";
@@ -292,5 +292,58 @@ export const deleteProductService = async (productId: string) => {
   if (!product) {
     throw new NotFoundError("Product not found.");
   }
+  return product;
+};
+
+export const approveProductService = async (
+  productId: string,
+  adminId: string,
+) => {
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+  product.isApproved = true;
+  product.approvedBy = new Types.ObjectId(adminId);
+  product.approvedAt = new Date();
+  product.rejectionReason = undefined;
+  await product.save();
+  return product;
+};
+
+export const rejectProductService = async (
+  productId: string,
+  adminId: string,
+  reason: string,
+) => {
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+  product.isApproved = false;
+  product.approvedBy = new Types.ObjectId(adminId);
+  product.approvedAt = undefined;
+  product.rejectionReason = reason;
+  await product.save();
+  return product;
+};
+
+export const toggleFeaturedService = async (productId: string) => {
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+  product.isFeatured = !product.isFeatured;
+  await product.save();
+  return product;
+};
+
+export const toggleActiveService = async (productId: string) => {
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+  product.isActive = !product.isActive;
+  await product.save();
   return product;
 };

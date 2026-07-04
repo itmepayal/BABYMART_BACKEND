@@ -14,6 +14,10 @@ import {
   getProductByIdService,
   getProductBySlugService,
   editProductService,
+  approveProductService,
+  rejectProductService,
+  toggleFeaturedService,
+  toggleActiveService,
 } from "./admin.service";
 import { apiResponse } from "../../utils/response/app.response";
 import { BadRequestError } from "../../utils/errors/app.error";
@@ -211,4 +215,65 @@ export const deleteProductController = async (
 ): Promise<void> => {
   await deleteProductService(req.params.productId);
   apiResponse(req.res!, StatusCodes.OK, "Product deleted successfully.");
+};
+
+export const approveProductController = async (
+  req: AuthRequest,
+): Promise<void> => {
+  const product = await approveProductService(
+    req.params.productId,
+    req.user!.id,
+  );
+  apiResponse(
+    req.res!,
+    StatusCodes.OK,
+    "Product approved successfully.",
+    product,
+  );
+};
+
+export const rejectProductController = async (
+  req: AuthRequest,
+): Promise<void> => {
+  const { reason } = req.body;
+  if (!reason?.trim()) {
+    throw new BadRequestError("Rejection reason is required.");
+  }
+  const product = await rejectProductService(
+    req.params.productId,
+    req.user!.id,
+    reason.trim(),
+  );
+  apiResponse(
+    req.res!,
+    StatusCodes.OK,
+    "Product rejected successfully.",
+    product,
+  );
+};
+
+export const toggleFeaturedController = async (
+  req: AuthRequest,
+): Promise<void> => {
+  const product = await toggleFeaturedService(req.params.productId);
+
+  apiResponse(
+    req.res!,
+    StatusCodes.OK,
+    `Product ${product.isFeatured ? "featured" : "removed from featured"} successfully.`,
+    product,
+  );
+};
+
+export const toggleActiveController = async (
+  req: AuthRequest,
+): Promise<void> => {
+  const product = await toggleActiveService(req.params.productId);
+
+  apiResponse(
+    req.res!,
+    StatusCodes.OK,
+    `Product ${product.isActive ? "activated" : "deactivated"} successfully.`,
+    product,
+  );
 };

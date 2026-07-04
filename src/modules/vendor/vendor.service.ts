@@ -11,7 +11,7 @@ import VendorProfile from "../../models/vendor.model";
 /* =========================
    Product Validation
 ========================= */
-const validateCategories = async (categoryIds: string[]) => {
+export const validateCategories = async (categoryIds: string[]) => {
   const count = await Category.countDocuments({
     _id: { $in: categoryIds },
   });
@@ -21,7 +21,7 @@ const validateCategories = async (categoryIds: string[]) => {
   }
 };
 
-const validateCollections = async (collectionIds: string[]) => {
+export const validateCollections = async (collectionIds: string[]) => {
   const count = await Collection.countDocuments({
     _id: { $in: collectionIds },
   });
@@ -31,7 +31,7 @@ const validateCollections = async (collectionIds: string[]) => {
   }
 };
 
-const validateProductCode = async (code: string, productId?: string) => {
+export const validateProductCode = async (code: string, productId?: string) => {
   const exists = await Product.findOne({
     ...(productId && { _id: { $ne: productId } }),
     code,
@@ -42,7 +42,7 @@ const validateProductCode = async (code: string, productId?: string) => {
   }
 };
 
-const validateVendorExists = async (vendorId: string) => {
+export const validateVendorExists = async (vendorId: string) => {
   const vendor = await VendorProfile.findById(vendorId);
   if (!vendor) {
     throw new NotFoundError("Vendor not found.");
@@ -58,24 +58,27 @@ export const createProductService = async (
 ) => {
   await validateVendorExists(vendorId);
 
-  if (payload.categories?.length) {
-    await validateCategories(payload.categories);
+  const sanitizedPayload = normalizeProductCode(stripProtectedFields(payload));
+
+  if (sanitizedPayload.categories?.length) {
+    await validateCategories(sanitizedPayload.categories);
   }
 
-  if (payload.collections?.length) {
-    await validateCollections(payload.collections);
+  if (sanitizedPayload.collections?.length) {
+    await validateCollections(sanitizedPayload.collections);
   }
 
-  if (payload.code) {
-    await validateProductCode(payload.code);
+  if (sanitizedPayload.code) {
+    await validateProductCode(sanitizedPayload.code);
   }
 
   return await Product.create({
-    ...payload,
+    ...sanitizedPayload,
     vendor: vendorId,
     isApproved: false,
     approvedBy: undefined,
     approvedAt: undefined,
+    rejectionReason: undefined,
   });
 };
 
@@ -101,16 +104,36 @@ export const getAllProductsService = async (
     sortOrder = "desc",
   } = params;
 
-  const skip = (page - 1) * limit;
+  const {
+    page: safePage,
+    limit: safeLimit,
+    skip,
+  } = sanitizePagination(page, limit);
 
-  const filter: Record<string, unknown> = { vendor: vendorId };
+  const safeSortBy = PRODUCT_SORT_FIELDS.includes(
+    sortBy as (typeof PRODUCT_SORT_FIELDS)[number],
+  )
+    ? sortBy
+    : "createdAt";
 
-  if (search) filter.$text = { $search: search };
-  if (isActive !== undefined) filter.isActive = isActive;
-  if (isApproved !== undefined) filter.isApproved = isApproved;
+  const filter: Record<string, unknown> = {
+    vendor: vendorId,
+  };
+
+  if (search) {
+    filter.$text = { $search: search };
+  }
+
+  if (isActive !== undefined) {
+    filter.isActive = isActive;
+  }
+
+  if (isApproved !== undefined) {
+    filter.isApproved = isApproved;
+  }
 
   const sort: Record<string, 1 | -1> = {
-    [sortBy]: sortOrder === "asc" ? 1 : -1,
+    [safeSortBy]: sortOrder === "asc" ? 1 : -1,
   };
 
   const [products, total] = await Promise.all([
@@ -119,7 +142,8 @@ export const getAllProductsService = async (
       .populate("collections")
       .sort(sort)
       .skip(skip)
-      .limit(limit),
+      .limit(safeLimit),
+
     Product.countDocuments(filter),
   ]);
 
@@ -127,9 +151,9 @@ export const getAllProductsService = async (
     products,
     pagination: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
     },
   };
 };
@@ -154,17 +178,31 @@ export const editProductService = async (
   productId: string,
   payload: UpdateProductInput,
 ) => {
-  const product = await Product.findOne({ _id: productId, vendor: vendorId });
+  const product = await Product.findOne({
+    _id: productId,
+    vendor: vendorId,
+  });
 
   if (!product) {
     throw new NotFoundError("Product not found.");
   }
 
-  if (payload.categories) await validateCategories(payload.categories);
-  if (payload.collections) await validateCollections(payload.collections);
-  if (payload.code) await validateProductCode(payload.code, productId);
+  const sanitizedPayload = normalizeProductCode(stripProtectedFields(payload));
 
-  Object.assign(product, payload);
+  if (sanitizedPayload.categories) {
+    await validateCategories(sanitizedPayload.categories);
+  }
+
+  if (sanitizedPayload.collections) {
+    await validateCollections(sanitizedPayload.collections);
+  }
+
+  if (sanitizedPayload.code) {
+    await validateProductCode(sanitizedPayload.code, productId);
+  }
+
+  Object.assign(product, sanitizedPayload);
+
   await product.save();
 
   return await product.populate([
