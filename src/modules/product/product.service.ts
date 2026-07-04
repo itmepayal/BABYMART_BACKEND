@@ -1,61 +1,9 @@
 import Product from "../../models/product.model";
-import Category from "../../models/category.model";
-import Collection from "../../models/collection.model";
-import { BadRequestError, NotFoundError } from "../../utils/errors/app.error";
-import {
-  CreateProductInput,
-  UpdateProductInput,
-} from "../../validators/product.validation";
+import { NotFoundError } from "../../utils/errors/app.error";
 
 /* =========================
    Product Services
 ========================= */
-const validateCategories = async (categoryIds: string[]) => {
-  const count = await Category.countDocuments({
-    _id: { $in: categoryIds },
-  });
-
-  if (count !== categoryIds.length) {
-    throw new BadRequestError("One or more categories are invalid.");
-  }
-};
-
-const validateCollections = async (collectionIds: string[]) => {
-  const count = await Collection.countDocuments({
-    _id: { $in: collectionIds },
-  });
-
-  if (count !== collectionIds.length) {
-    throw new BadRequestError("One or more collections are invalid.");
-  }
-};
-
-const validateProductCode = async (code: string, productId?: string) => {
-  const exists = await Product.findOne({
-    ...(productId && { _id: { $ne: productId } }),
-    code,
-  });
-
-  if (exists) {
-    throw new BadRequestError("Product code already exists.");
-  }
-};
-export const createProductService = async (payload: CreateProductInput) => {
-  if (payload.categories?.length) {
-    await validateCategories(payload.categories);
-  }
-
-  if (payload.collections?.length) {
-    await validateCollections(payload.collections);
-  }
-
-  if (payload.code) {
-    await validateProductCode(payload.code);
-  }
-
-  return await Product.create(payload);
-};
-
 export const getAllProductsService = async (params: {
   page?: number;
   limit?: number;
@@ -65,9 +13,6 @@ export const getAllProductsService = async (params: {
   vendor?: string;
   minPrice?: number;
   maxPrice?: number;
-  inStock?: boolean;
-  isFeatured?: boolean;
-  isActive?: boolean;
   tags?: string[];
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -81,9 +26,6 @@ export const getAllProductsService = async (params: {
     vendor,
     minPrice,
     maxPrice,
-    inStock,
-    isFeatured,
-    isActive,
     tags,
     sortBy = "createdAt",
     sortOrder = "desc",
@@ -91,10 +33,15 @@ export const getAllProductsService = async (params: {
 
   const skip = (page - 1) * limit;
 
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = {
+    isActive: true,
+    isApproved: true,
+  };
 
   if (search) {
-    filter.$text = { $search: search };
+    filter.$text = {
+      $search: search,
+    };
   }
 
   if (category) {
@@ -110,19 +57,9 @@ export const getAllProductsService = async (params: {
   }
 
   if (tags?.length) {
-    filter.tags = { $in: tags };
-  }
-
-  if (typeof inStock === "boolean") {
-    filter.inStock = inStock;
-  }
-
-  if (typeof isFeatured === "boolean") {
-    filter.isFeatured = isFeatured;
-  }
-
-  if (typeof isActive === "boolean") {
-    filter.isActive = isActive;
+    filter.tags = {
+      $in: tags,
+    };
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {
@@ -159,21 +96,12 @@ export const getAllProductsService = async (params: {
   };
 };
 
-export const getProductByIdService = async (productId: string) => {
-  const product = await Product.findById(productId)
-    .populate("categories")
-    .populate("collections")
-    .populate("vendor", "-password");
-
-  if (!product) {
-    throw new NotFoundError("Product not found.");
-  }
-
-  return product;
-};
-
 export const getProductBySlugService = async (slug: string) => {
-  const product = await Product.findOne({ slug })
+  const product = await Product.findOne({
+    slug,
+    isActive: true,
+    isApproved: true,
+  })
     .populate("categories")
     .populate("collections")
     .populate("vendor", "-password");
@@ -185,45 +113,40 @@ export const getProductBySlugService = async (slug: string) => {
   return product;
 };
 
-export const updateProductService = async (
+export const getRelatedProductsService = async (
   productId: string,
-  payload: UpdateProductInput,
+  limit = 8,
 ) => {
   const product = await Product.findById(productId);
-
   if (!product) {
     throw new NotFoundError("Product not found.");
   }
-
-  if (payload.categories) {
-    await validateCategories(payload.categories);
-  }
-
-  if (payload.collections) {
-    await validateCollections(payload.collections);
-  }
-
-  if (payload.code) {
-    await validateProductCode(payload.code, productId);
-  }
-
-  Object.assign(product, payload);
-
-  await product.save();
-
-  return await product.populate([
-    { path: "categories" },
-    { path: "collections" },
-    { path: "vendor", select: "-password" },
-  ]);
-};
-
-export const deleteProductService = async (productId: string) => {
-  const product = await Product.findOneAndDelete({
-    _id: productId,
-  });
-  if (!product) {
-    throw new NotFoundError("Product not found.");
-  }
-  return product;
+  const relatedProducts = await Product.find({
+    _id: { $ne: product._id },
+    isActive: true,
+    isApproved: true,
+    $or: [
+      {
+        categories: {
+          $in: product.categories,
+        },
+      },
+      {
+        collections: {
+          $in: product.collections,
+        },
+      },
+      {
+        tags: {
+          $in: product.tags,
+        },
+      },
+    ],
+  })
+    .sort({
+      sold: -1,
+      rating: -1,
+    })
+    .limit(limit);
+  return relatedProducts;
 };

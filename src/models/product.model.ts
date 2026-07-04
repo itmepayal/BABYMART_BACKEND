@@ -55,7 +55,6 @@ export interface IProduct extends Document {
   isFeatured: boolean;
   isActive: boolean;
 
-  // ---- approval workflow ----
   isApproved: boolean;
   approvedBy?: Types.ObjectId;
   approvedAt?: Date;

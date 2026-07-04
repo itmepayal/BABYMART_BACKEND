@@ -2,39 +2,52 @@ import { Router } from "express";
 import {
   getAllUsersController,
   getUserByIdController,
-  updateUserRoleController,
-  updateUserStatusController,
+  editUserRoleController,
+  editUserStatusController,
   deleteUserController,
 } from "./admin.controller";
+import {
+  createProductController,
+  deleteProductController,
+  getAllProductsController,
+  getProductByIdController,
+  editProductController,
+} from "./admin.controller";
 import { protect, authorize } from "../../middlewares/auth.middleware";
+import { upload } from "../../middlewares/multer.middleware";
 
 export const adminRouter = Router();
+
+adminRouter.use(protect, authorize("admin"));
 
 /* =========================
    Admin User Management
 ========================= */
-adminRouter.get("/users", protect, authorize("admin"), getAllUsersController);
-adminRouter.get(
-  "/users/:userId",
-  protect,
-  authorize("admin"),
-  getUserByIdController,
+adminRouter.get("/users", getAllUsersController);
+adminRouter.get("/users/:userId", getUserByIdController);
+adminRouter.patch("/users/:userId/role", editUserRoleController);
+adminRouter.patch("/users/:userId/status", editUserStatusController);
+adminRouter.delete("/users/:userId", deleteUserController);
+
+/* =========================
+   Admin Product Management
+========================= */
+adminRouter.get("/products", getAllProductsController);
+adminRouter.get("/products/:productId", getProductByIdController);
+adminRouter.post(
+  "/products",
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "images", maxCount: 10 },
+  ]),
+  createProductController,
 );
 adminRouter.patch(
-  "/users/:userId/role",
-  protect,
-  authorize("admin"),
-  updateUserRoleController,
+  "/products/:productId",
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "images", maxCount: 10 },
+  ]),
+  editProductController,
 );
-adminRouter.patch(
-  "/users/:userId/status",
-  protect,
-  authorize("admin"),
-  updateUserStatusController,
-);
-adminRouter.delete(
-  "/users/:userId",
-  protect,
-  authorize("admin"),
-  deleteUserController,
-);
+adminRouter.delete("/products/:productId", deleteProductController);
