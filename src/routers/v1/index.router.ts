@@ -13,12 +13,14 @@ import { brandRouter } from "../../modules/brand/brand.route";
 import { bannerRouter } from "../../modules/banner/banner.route";
 import { newsletterRouter } from "../../modules/newsletter/newsletter.route";
 import { contactRouter } from "../../modules/contact/contact.route";
+import { vendorRouter } from "../../modules/vendor/vendor.route";
 
 const v1Router = express.Router();
 
 v1Router.use("/account", authRouter);
 v1Router.use("/users", userRouter);
 v1Router.use("/admin", adminRouter);
+v1Router.use("/vendors", vendorRouter);
 v1Router.use("/products", productRouter);
 v1Router.use("/categories", categoryRouter);
 v1Router.use("/collections", collectionRouter);

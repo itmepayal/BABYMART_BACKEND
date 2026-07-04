@@ -7,6 +7,12 @@ import {
   UpdateProductInput,
 } from "../../validators/product.validation";
 import VendorProfile from "../../models/vendor.model";
+import {
+  normalizeProductCode,
+  PRODUCT_SORT_FIELDS,
+  sanitizePagination,
+  stripProtectedFields,
+} from "../../utils/secure/product.utils";
 
 /* =========================
    Product Validation
