@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import logger from "./config/logger.config";
 import { serverConfig } from "./config";
 import { connectDB, disconnectDB } from "./config/db.config";
@@ -6,12 +7,27 @@ import v1Router from "./routers/v1/index.router";
 import { globalErrorHandler } from "./middlewares/error.middleware";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:8081",
+      "http://127.0.0.1:8081",
+    ],
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 
 app.use("/api/v1", v1Router);
+
 app.use(globalErrorHandler);
 
 let server: ReturnType<typeof app.listen>;
+
 const startServer = async () => {
   try {
     await connectDB();
