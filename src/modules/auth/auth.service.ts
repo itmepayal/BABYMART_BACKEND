@@ -56,7 +56,11 @@ export const loginService = async (data: LoginInput) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
+  user.refreshToken = refreshToken;
+  await user.save();
+
   user.password = undefined as never;
+  user.refreshToken = undefined as never;
 
   return {
     user,
@@ -81,6 +85,7 @@ export const refreshTokenService = async (refreshToken: string) => {
   if (!user) {
     throw new UnauthorizedError("User not found.");
   }
+
   if (!user.refreshToken || user.refreshToken !== refreshToken) {
     throw new UnauthorizedError("Invalid refresh token.");
   }

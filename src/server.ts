@@ -21,13 +21,9 @@ app.use(
 );
 
 app.use(express.json());
-
 app.use("/api/v1", v1Router);
-
 app.use(globalErrorHandler);
-
 let server: ReturnType<typeof app.listen>;
-
 const startServer = async () => {
   try {
     await connectDB();
