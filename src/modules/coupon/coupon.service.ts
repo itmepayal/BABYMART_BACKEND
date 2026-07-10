@@ -44,14 +44,13 @@ export const getAllCouponsService = async (
     Coupon.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
     Coupon.countDocuments(filter),
   ]);
+
   return {
     coupons,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
   };
 };
 
