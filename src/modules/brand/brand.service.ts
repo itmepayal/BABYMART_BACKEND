@@ -40,12 +40,10 @@ export const getAllBrandsService = async (
   ]);
   return {
     brands,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    page,
+    limit,
+    total,
+    pages: Math.ceil(total / limit),
   };
 };
 
