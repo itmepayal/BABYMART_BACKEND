@@ -23,7 +23,7 @@ export const getAboutService = async () => {
   return about;
 };
 
-export const updateAboutService = async (payload: AboutInput) => {
+export const updateAboutService = async (payload: Partial<AboutInput>) => {
   const about = await About.findOne();
   if (!about) {
     throw new NotFoundError("About page not found.");

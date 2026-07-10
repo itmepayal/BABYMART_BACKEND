@@ -12,6 +12,8 @@ const founderSchema = z.object({
     .trim()
     .min(2, "Designation must be at least 2 characters")
     .max(100, "Designation cannot exceed 100 characters"),
+
+  image: z.string().trim().min(1, "Founder image is required"),
 });
 
 const featureSchema = z.object({
@@ -78,6 +80,8 @@ export const aboutSchema = z.object({
     .array(founderSchema)
     .min(1, "At least one founder is required")
     .max(10, "Maximum 10 founders are allowed"),
+
+  clientLogos: z.array(z.string().trim().min(1)).default([]),
 });
 
 export type AboutInput = z.infer<typeof aboutSchema>;

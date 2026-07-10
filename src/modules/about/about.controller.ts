@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { uploadToCloudinary } from "../../config/cloudinary.config";
 import { AuthRequest } from "../../types/express";
 import { apiResponse } from "../../utils/response/app.response";
-import { aboutSchema } from "../../validators/about.validation";
+import { AboutInput, aboutSchema } from "../../validators/about.validation";
 import {
   createAboutService,
   getAboutService,
@@ -40,7 +40,6 @@ export const createAboutController = async (
   if (files?.clientLogos?.length) {
     for (const file of files.clientLogos) {
       const uploaded = await uploadToCloudinary(file.path, "babymart/about");
-
       clientLogos.push(uploaded.url);
     }
   }
@@ -86,38 +85,51 @@ export const updateAboutController = async (
     sectionImage?: Express.Multer.File[];
     clientLogos?: Express.Multer.File[];
   };
-  const payload: Record<string, any> = {
+
+  const payload: Partial<AboutInput> = {
     ...req.body,
   };
+
   if (files?.heroImage?.length) {
     const uploaded = await uploadToCloudinary(
       files.heroImage[0].path,
       "babymart/about",
     );
+
     payload.heroImage = uploaded.url;
   }
+
   if (files?.sectionImage?.length) {
     const uploaded = await uploadToCloudinary(
       files.sectionImage[0].path,
       "babymart/about",
     );
+
     payload.sectionImage = uploaded.url;
   }
+
   if (files?.clientLogos?.length) {
-    payload.clientLogos = [];
+    const clientLogos: string[] = [];
+
     for (const file of files.clientLogos) {
       const uploaded = await uploadToCloudinary(file.path, "babymart/about");
-      payload.clientLogos.push(uploaded.url);
+
+      clientLogos.push(uploaded.url);
     }
+
+    payload.clientLogos = clientLogos;
   }
+
   if (req.body.features) {
     payload.features = JSON.parse(req.body.features);
   }
+
   if (req.body.founders) {
     payload.founders = JSON.parse(req.body.founders);
   }
-  const validated = aboutSchema.parse(payload);
-  const about = await updateAboutService(validated);
+
+  const about = await updateAboutService(payload);
+
   apiResponse(
     req.res!,
     StatusCodes.OK,
