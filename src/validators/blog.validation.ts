@@ -43,7 +43,11 @@ export const createBlogPostSchema = z.object({
     .min(50, "Body must be at least 50 characters")
     .max(100000, "Body is too large"),
 
-  isPublished: z.boolean().optional().default(true),
+  isPublished: z.preprocess((value) => {
+    if (value === "true") return true;
+    if (value === "false") return false;
+    return value;
+  }, z.boolean()),
 
   publishedAt: z.coerce.date().optional(),
 });
