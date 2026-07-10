@@ -9,4 +9,6 @@ export const bannerSchema = z.object({
   subBannerTwo: z.string().trim().min(1, "Sub Banner Two image is required"),
 });
 
+export const updateBannerSchema = bannerSchema.partial();
 export type BannerInput = z.infer<typeof bannerSchema>;
+export type ChangeBannerInput = z.infer<typeof bannerSchema>;

@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { uploadToCloudinary } from "../../config/cloudinary.config";
 import { AuthRequest } from "../../types/express";
 import { apiResponse } from "../../utils/response/app.response";
-import { bannerSchema } from "../../validators/banner.validation";
+import { BannerInput, bannerSchema } from "../../validators/banner.validation";
 import {
   createBannerService,
   getBannerService,
@@ -79,16 +79,18 @@ export const updateBannerController = async (
     subBannerOne?: Express.Multer.File[];
     subBannerTwo?: Express.Multer.File[];
   };
-  const payload: Record<string, any> = {
-    ...req.body,
-  };
+
+  const payload: Partial<BannerInput> = {};
+
   if (files?.images?.length) {
-    payload.images = [];
+    const images: string[] = [];
     for (const file of files.images) {
       const uploaded = await uploadToCloudinary(file.path, "babymart/banners");
-      payload.images.push(uploaded.url);
+      images.push(uploaded.url);
     }
+    payload.images = images;
   }
+
   if (files?.subBannerOne?.length) {
     const uploaded = await uploadToCloudinary(
       files.subBannerOne[0].path,
@@ -96,6 +98,7 @@ export const updateBannerController = async (
     );
     payload.subBannerOne = uploaded.url;
   }
+
   if (files?.subBannerTwo?.length) {
     const uploaded = await uploadToCloudinary(
       files.subBannerTwo[0].path,
@@ -103,7 +106,6 @@ export const updateBannerController = async (
     );
     payload.subBannerTwo = uploaded.url;
   }
-  const validated = bannerSchema.parse(payload);
-  const banner = await updateBannerService(validated);
+  const banner = await updateBannerService(payload);
   apiResponse(req.res!, StatusCodes.OK, "Banner updated successfully.", banner);
 };

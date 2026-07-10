@@ -23,7 +23,7 @@ export const getBannerService = async () => {
   return banner;
 };
 
-export const updateBannerService = async (payload: BannerInput) => {
+export const updateBannerService = async (payload: Partial<BannerInput>) => {
   const banner = await Banner.findOne();
   if (!banner) {
     throw new NotFoundError("Banner not found.");
