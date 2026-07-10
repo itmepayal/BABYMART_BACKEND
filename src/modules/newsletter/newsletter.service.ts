@@ -52,12 +52,10 @@ export const getAllNewslettersService = async (
   ]);
   return {
     newsletters,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
   };
 };
 
