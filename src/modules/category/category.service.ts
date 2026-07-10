@@ -46,12 +46,10 @@ export const getAllCategoriesService = async (
 
   return {
     categories,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
   };
 };
 
