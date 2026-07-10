@@ -87,12 +87,10 @@ export const getAllProductsService = async (params: {
 
   return {
     products,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
   };
 };
 

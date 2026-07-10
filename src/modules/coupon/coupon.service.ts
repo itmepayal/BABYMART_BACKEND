@@ -53,7 +53,6 @@ export const getAllCouponsService = async (
     pages: Math.ceil(total / limit),
   };
 };
-
 export const getCouponByIdService = async (couponId: string) => {
   const coupon = await Coupon.findById(couponId);
   if (!coupon) {
